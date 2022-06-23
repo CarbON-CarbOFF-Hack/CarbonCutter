@@ -18,46 +18,46 @@ def gui_loop():
 
     layout = [
         [
-            sg.Text(f'Your last month\'s energy use was: {total_use}wh'),
+            sg.Text(f'Your last month\'s energy use was: {total_use}wh', font=('Any 15')),
         ],
         [
-            sg.Text(f'Which is {int(0.000223*total_use)}kg of CO2e'),
+            sg.Text(f'Which is {int(0.000223*total_use)}kg of CO2e', font=('Any 15')),
         ],
         [
-            sg.Button('Plot last month')
+            sg.Button('Plot last month', font=('Any 15'))
         ],
         [
-            sg.Text('From your energy use for cooking we calculate you cooked for:')
+            sg.Text('From your energy use for cooking we calculate you cooked for:', font=('Any 15'))
         ],
         [
-            sg.Text(f'{cook_hours} hours')
+            sg.Text(f'{cook_hours} hours', font=('Any 15'))
         ],
         [
-            sg.Text('From your energy use for fridge/freezer we calculate you had your fridge-freezer appliances on for:')
+            sg.Text('From your energy use for fridge/freezer we calculate you had your fridge-freezer appliances on for:', font=('Any 15'))
         ],
         [
-            sg.Text(f'{ff_hours} hours')
+            sg.Text(f'{ff_hours} hours', font=('Any 15'))
         ],
         [
-            sg.Text(f'Your predicted next week\'s energy use is: {int(total_use/4)}wh'),
+            sg.Text(f'Your predicted next week\'s energy use is: {int(total_use/4)}wh', font=('Any 15')),
         ],
         [
-            sg.Text(f'Which is {int(0.000223*total_use/4)}kg of CO2e'),
+            sg.Text(f'Which is {int(0.000223*total_use/4)}kg of CO2e', font=('Any 15')),
         ],
         [
-            sg.Button('Plot next week')
+            sg.Button('Plot next week', font=('Any 15'))
         ],
         [
-            sg.Text('If you cooked for 2 hours less next week, you could reduce your next week CO2e to:')
+            sg.Text('If you cooked for 2 hours less next week, you could reduce your next week CO2e to:', font=('Any 15'))
         ],
         [
-            sg.Text(f'{int(0.000223*(total_use/4 - avg_cook * 4))}kg')
+            sg.Text(f'{int(0.000223*(total_use/4 - avg_cook * 4))}kg', font=('Any 15'))
         ],
         [
-            sg.Button('Plot compared forecasted energy')
+            sg.Button('Plot compared forecasted energy', font=('Any 15'))
         ],
         [
-            sg.Button('Exit')
+            sg.Button('Exit', font=('Any 15'))
         ]
     ]
 
@@ -71,6 +71,8 @@ def gui_loop():
         if event == 'Plot last month':
             draw_plot()
         if event == 'Plot next week':
+            draw_plot()
+        if event == 'Plot compared forecasted energy':
             draw_plot()
         if event == 'Show':
             # Update the "output" text element to be the value of "input" element
