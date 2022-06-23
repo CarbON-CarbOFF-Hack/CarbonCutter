@@ -5,27 +5,30 @@ from requests.structures import CaseInsensitiveDict
 import pandas as pd
 import matplotlib.pyplot as plt
 from estimate_appliance_use import import_house_csv, calculate_usage
+from model import get_models, plot_forecast, plot_reductions
 
-sg.theme('BluePurple')
 
-layout = [[sg.Text('Your typed chars appear here:'), sg.Text(size=(15,1), key='-OUTPUT-')],
-          [sg.Input(key='-IN-')],
-          [sg.Button('Show'), sg.Button('Exit')]]
+# sg.theme('BluePurple')
+#
+# layout = [[sg.Text('Your typed chars appear here:'), sg.Text(size=(15,1), key='-OUTPUT-')],
+#           [sg.Input(key='-IN-')],
+#           [sg.Button('Show'), sg.Button('Exit')]]
+#
+# window = sg.Window('Pattern 2B', layout)
+#
+# while True:  # Event Loop
+#     event, values = window.read()
+#     print(event, values)
+#     print(type(event))
+#     print(type(values))
+#     if event == sg.WIN_CLOSED or event == 'Exit':
+#         break
+#     if event == 'Show':
+#         # Update the "output" text element to be the value of "input" element
+#         window['-OUTPUT-'].update(values['-IN-'])
+#
+# window.close()
 
-window = sg.Window('Pattern 2B', layout)
-
-while True:  # Event Loop
-    event, values = window.read()
-    print(event, values)
-    print(type(event))
-    print(type(values))
-    if event == sg.WIN_CLOSED or event == 'Exit':
-        break
-    if event == 'Show':
-        # Update the "output" text element to be the value of "input" element
-        window['-OUTPUT-'].update(values['-IN-'])
-
-window.close()
 
 def import_data(URL):
     """
@@ -62,7 +65,7 @@ def gui_loop():
             sg.Text(f'Your last month\'s energy use was: {total_use}wh', font=('Any 15')),
         ],
         [
-            sg.Text(f'Which is {int(0.000223*total_use)}kg of CO2e', font=('Any 15')),
+            sg.Text(f'Which is {int(0.000223 * total_use)}kg of CO2e', font=('Any 15')),
         ],
         [
             sg.Button('Plot last month', font=('Any 15'))
@@ -74,25 +77,28 @@ def gui_loop():
             sg.Text(f'{cook_hours} hours', font=('Any 15'))
         ],
         [
-            sg.Text('From your energy use for fridge/freezer we calculate you had your fridge-freezer appliances on for:', font=('Any 15'))
+            sg.Text(
+                'From your energy use for fridge/freezer we calculate you had your fridge-freezer appliances on for:',
+                font=('Any 15'))
         ],
         [
             sg.Text(f'{ff_hours} hours', font=('Any 15'))
         ],
         [
-            sg.Text(f'Your predicted next week\'s energy use is: {int(total_use/4)}wh', font=('Any 15')),
+            sg.Text(f'Your predicted next week\'s energy use is: {int(total_use / 4)}wh', font=('Any 15')),
         ],
         [
-            sg.Text(f'Which is {int(0.000223*total_use/4)}kg of CO2e', font=('Any 15')),
+            sg.Text(f'Which is {int(0.000223 * total_use / 4)}kg of CO2e', font=('Any 15')),
         ],
         [
             sg.Button('Plot next week', font=('Any 15'))
         ],
         [
-            sg.Text('If you cooked for 2 hours less next week, you could reduce your next week CO2e to:', font=('Any 15'))
+            sg.Text('If you cooked for 2 hours less next week, you could reduce your next week CO2e to:',
+                    font=('Any 15'))
         ],
         [
-            sg.Text(f'{int(0.000223*(total_use/4 - avg_cook * 4))}kg', font=('Any 15'))
+            sg.Text(f'{int(0.000223 * (total_use / 4 - avg_cook * 4))}kg', font=('Any 15'))
         ],
         [
             sg.Button('Plot compared forecasted energy', font=('Any 15'))
@@ -136,7 +142,7 @@ def convert_json_to_dataframe(data):
     # drop columns that aren't relevant to prediction
     df = df.drop(['resolution', 'from', 'to', 'fuel', 'unit'], axis=1)
     # rename 'consumption' column to included unit
-    df = df.rename(columns={'consumption':'Energy (wh)'})
+    df = df.rename(columns={'consumption': 'Energy (wh)'})
     df['Energy (wh)'] = df['Energy (wh)'].astype(float, errors='raise')
     # index energy consumption values by day
     df['Local datetime'] = pd.date_range(start=start_date, periods=len(df), freq='D')
@@ -144,13 +150,14 @@ def convert_json_to_dataframe(data):
     return df
 
 
-
 def run_model(dataframe):
     """
     run model on data to predict future outcomes
     return model_output
     """
-    pass
+    y_preds, stds = get_models(dataframe)
+    X_prev, y_prev, X_fut, y_fut, errors = plot_forecast(dataframe, y_preds, stds)
+    plot_reductions(X_prev, y_prev, X_fut, y_fut, errors)
 
 
 def display_info(model_output, df):
@@ -168,7 +175,7 @@ if __name__ == '__main__':
     data_json = import_data(queryURL)
     dataframe = convert_json_to_dataframe(data_json)
 
-    # run_model(dataframe)
+    run_model(dataframe)
     # df = import_csvs('data/')
     model_output = run_model(dataframe)
 
