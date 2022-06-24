@@ -185,7 +185,7 @@ def plot_forecast(df_shifts, y_preds, stds):
     return X_prev, y_prev, X_fut, y_fut, errors
 
 
-def plot_reductions(X_prev, y_prev, X_fut, y_fut, errors, reductions=[0, 1000, 10000]):
+def plot_past(X_prev, y_prev):
     colors = ['aqua', 'violet', 'limegreen']
     fig = go.Figure(go.Scatter(
         name='existing data',
@@ -195,6 +195,21 @@ def plot_reductions(X_prev, y_prev, X_fut, y_fut, errors, reductions=[0, 1000, 1
         mode='lines'
     )
     )
+
+    fig.show()
+
+
+def plot_reductions(X_prev, y_prev, X_fut, y_fut, errors, reductions=[0]):
+    colors = ['aqua', 'violet', 'limegreen']
+    fig = go.Figure(go.Scatter(
+        name='existing data',
+        x=X_prev,
+        y=y_prev,
+        line=dict(color='blue'),
+        mode='lines'
+    )
+    )
+
     for i, reduction in enumerate(reductions):
         new = y_fut.copy()
         # new_errors = errors.copy()
@@ -202,7 +217,10 @@ def plot_reductions(X_prev, y_prev, X_fut, y_fut, errors, reductions=[0, 1000, 1
         # new_errors[1:] = new_errors[1:] - reduction
         y_upper = new + errors
         y_lower = new - errors
-        name = 'reduction of : ' + str(reduction) + 'Wh'
+        if reduction == 0:
+            name = 'predicted future consumption'
+        else:
+            name = 'reducing your consumption by ' + str(reduction) + ' CO2e'
         if i == 0:
             visible = True
         else:

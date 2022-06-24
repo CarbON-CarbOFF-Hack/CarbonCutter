@@ -5,7 +5,7 @@ from requests.structures import CaseInsensitiveDict
 import pandas as pd
 import matplotlib.pyplot as plt
 from estimate_appliance_use import import_house_csv, calculate_usage
-from model import get_models, plot_forecast, plot_reductions
+from model import get_models, plot_forecast, plot_reductions, plot_past
 
 
 # sg.theme('BluePurple')
@@ -48,12 +48,13 @@ def import_data(URL):
     return data
 
 
-def draw_plot():
-    plt.plot([0.1, 0.2, 0.5, 0.7])
-    plt.show(block=False)
+def draw_plot(X, y, errors=None, reduction=None):
+    # plt.plot([0.1, 0.2, 0.5, 0.7])
+    # plt.show(block=False)
+    plot_reductions(X, y)
 
 
-def gui_loop():
+def gui_loop(X_prev, y_prev, X_fut, y_fut, errors):
     useful_h_dict = import_house_csv()
     avg_cook, avg_ff, cook_hours, ff_hours = calculate_usage(useful_h_dict)
     total_use = useful_h_dict['total_use']
@@ -94,11 +95,11 @@ def gui_loop():
             sg.Button('Plot next week', font=('Any 15'))
         ],
         [
-            sg.Text('If you cooked for 2 hours less next week, you could reduce your next week CO2e to:',
+            sg.Text('If you reduced your energy consumption by 10,000 Wh, you could reduce your next week CO2e to:',
                     font=('Any 15'))
         ],
         [
-            sg.Text(f'{int(0.000223 * (total_use / 4 - avg_cook * 4))}kg', font=('Any 15'))
+            sg.Text(f'{int(0.000223 * (total_use - 10_000))}kg', font=('Any 15'))
         ],
         [
             sg.Button('Plot compared forecasted energy', font=('Any 15'))
@@ -116,11 +117,12 @@ def gui_loop():
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
         if event == 'Plot last month':
-            draw_plot()
+            plot_past(X_prev, y_prev*0.000223)
         if event == 'Plot next week':
-            draw_plot()
+            plot_reductions(X_prev, y_prev*0.000223, X_fut, y_fut*0.000223, errors*0.000223)
         if event == 'Plot compared forecasted energy':
-            draw_plot()
+            plot_reductions(X_prev, y_prev*0.000223, X_fut, y_fut*0.000223, errors*0.000223,
+                            reductions=[0, 10_000*0.000223])
         if event == 'Show':
             # Update the "output" text element to be the value of "input" element
             window['-OUTPUT-'].update(values['-IN-'])
@@ -157,7 +159,8 @@ def run_model(dataframe):
     """
     y_preds, stds = get_models(dataframe)
     X_prev, y_prev, X_fut, y_fut, errors = plot_forecast(dataframe, y_preds, stds)
-    plot_reductions(X_prev, y_prev, X_fut, y_fut, errors)
+    # plot_reductions(X_prev, y_prev, X_fut, y_fut, errors)
+    return X_prev, y_prev, X_fut, y_fut, errors
 
 
 def display_info(model_output, df):
@@ -175,9 +178,9 @@ if __name__ == '__main__':
     data_json = import_data(queryURL)
     dataframe = convert_json_to_dataframe(data_json)
 
-    run_model(dataframe)
+    X_prev, y_prev, X_fut, y_fut, errors = run_model(dataframe)
     # df = import_csvs('data/')
-    model_output = run_model(dataframe)
+    # model_output = run_model(dataframe)
 
     # USER IS SHOWN GRAPH OF PAST ENERGY USE AND PREDICTED FUTURE ENERGY USE,
     # AS WELL AS THE ESTIMATED WAYS THEY USED ENERGY IN THE LAST MONTH
@@ -187,4 +190,4 @@ if __name__ == '__main__':
     # USER IS THEN PROMPTED
     # USER IS THEN PROMPTED
 
-    gui_loop()
+    gui_loop(X_prev, y_prev, X_fut, y_fut, errors)
